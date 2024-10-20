@@ -6,14 +6,29 @@ import torch.nn.functional as F
 class ConvNet(nn.Module):
     def __init__(self, mode):
         super(ConvNet, self).__init__()
-        
-        # Define various layers here, such as in the tutorial example
-        # self.conv1 = nn.Conv2D(...)
-        
-        # This will select the forward pass function based on mode for the ConvNet.
-        # Based on the question, you have 5 modes available for step 1 to 5.
-        # During creation of each ConvNet model, you will assign one of the valid mode.
-        # This will fix the forward function (and the network graph) for the entire training/testing
+        #For Model 1
+        self.fc1_m1 = nn.Linear(28 * 28, 100)
+        self.fc2_m1 = nn.Linear(100, 10)
+
+        # For Model 2 & 3
+        self.conv1 = nn.Conv2d(1, 40, kernel_size=5, stride=1) 
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)  
+        self.conv2 = nn.Conv2d(40, 40, kernel_size=5, stride=1)  
+        self.fc1_m2_3 = nn.Linear(40 * 4 * 4, 100) 
+        self.fc2_m2_3 = nn.Linear(100, 10)
+
+        # For Model 4
+        self.fc1_m4 = nn.Linear(40 * 4 * 4, 100)  
+        self.fc2_m4 = nn.Linear(100, 100)  
+        self.fc3_m4 = nn.Linear(100, 10)
+
+        # For Model 5
+        self.fc1_m5 = nn.Linear(40 * 4 * 4, 1000)
+        self.fc2_m5 = nn.Linear(1000, 1000) 
+        self.fc3_m5 = nn.Linear(1000, 10)
+        self.dropout = nn.Dropout(0.5)
+
+
         if mode == 1:
             self.forward = self.model_1
         elif mode == 2:
@@ -31,64 +46,87 @@ class ConvNet(nn.Module):
         
     # Baseline model. step 1
     def model_1(self, X):
-        # ======================================================================
-        # One fully connected layer.
-        #
-        # ----------------- YOUR CODE HERE ----------------------
-        #
-        # Uncomment the following return stmt once method implementation is done.
-        # return  fcl
-        # Delete line return NotImplementedError() once method is implemented.
-        return NotImplementedError()
+        #################################
+        ### One fully connected layer ###
+        #################################
+        X = torch.flatten(X, start_dim=1)
+        X = self.fc1_m1(X)
+        X = F.sigmoid(X)
+        X = self.fc2_m1(X)
+        return X
 
     # Use two convolutional layers.
     def model_2(self, X):
-        # ======================================================================
-        # Two convolutional layers + one fully connnected layer.
-        #
-        # ----------------- YOUR CODE HERE ----------------------
-        #
-        # Uncomment the following return stmt once method implementation is done.
-        # return  fcl
-        # Delete line return NotImplementedError() once method is implemented.
-        return NotImplementedError()
+        #############################################################
+        ### Two convolutional layers + one fully connnected layer ###
+        #############################################################
+        X = self.conv1(X)
+        X = F.sigmoid(X)
+        X = self.pool(X)
+        X = self.conv2(X)
+        X = F.sigmoid(X)
+        X = self.pool(X)
+        X = torch.flatten(X, start_dim=1)
+        X = self.fc1_m2_3(X)
+        X = F.sigmoid(X)
+        X = self.fc2_m2_3(X)
+        return X
 
     # Replace sigmoid with ReLU.
     def model_3(self, X):
-        # ======================================================================
-        # Two convolutional layers + one fully connected layer, with ReLU.
-        #
-        # ----------------- YOUR CODE HERE ----------------------
-        #
-        # Uncomment the following return stmt once method implementation is done.
-        # return  fcl
-        # Delete line return NotImplementedError() once method is implemented.
-        return NotImplementedError()
+        #######################################################################
+        ### Two convolutional layers + one fully connected layer, with ReLU ###
+        #######################################################################
+        X = self.conv1(X)
+        X = F.relu(X)
+        X = self.pool(X)
+        X = self.conv2(X)
+        X = F.relu(X)
+        X = self.pool(X)
+        X = torch.flatten(X, start_dim=1)
+        X = self.fc1_m2_3(X)
+        X = F.relu(X)
+        X = self.fc2_m2_3(X)
+        return X
 
     # Add one extra fully connected layer.
     def model_4(self, X):
-        # ======================================================================
-        # Two convolutional layers + two fully connected layers, with ReLU.
-        #
-        # ----------------- YOUR CODE HERE ----------------------
-        #
-        # Uncomment the following return stmt once method implementation is done.
-        # return  fcl
-        # Delete line return NotImplementedError() once method is implemented.
-        return NotImplementedError()
+        ########################################################################
+        ### Two convolutional layers + two fully connected layers, with ReLU ###
+        ########################################################################
+        X = self.conv1(X)
+        X = F.relu(X)
+        X = self.pool(X)
+        X = self.conv2(X)
+        X = F.relu(X)
+        X = self.pool(X)
+        X = torch.flatten(X, start_dim=1)
+        X = self.fc1_m4(X)
+        X = F.relu(X)
+        X = self.fc2_m4(X)
+        X = F.relu(X)
+        X = self.fc3_m4(X)
+        return X
 
     # Use Dropout now.
     def model_5(self, X):
-        # ======================================================================
-        # Two convolutional layers + two fully connected layers, with ReLU.
-        # and  + Dropout.
-        #
-        # ----------------- YOUR CODE HERE ----------------------
-        #
-
-        # Uncomment the following return stmt once method implementation is done.
-        # return  fcl
-        # Delete line return NotImplementedError() once method is implemented.
-        return NotImplementedError()
+        ##################################################################################
+        ### Two convolutional layers + two fully connected layers, with ReLU + Dropout ###
+        ##################################################################################
+        X = self.conv1(X)
+        X = F.relu(X)
+        X = self.pool(X)
+        X = self.conv2(X)
+        X = F.relu(X)
+        X = self.pool(X)
+        X = torch.flatten(X, start_dim=1)
+        X = self.fc1_m5(X)
+        X = F.relu(X)
+        X = self.dropout(X)
+        X = self.fc2_m5(X)
+        X = F.relu(X)
+        X = self.dropout(X)
+        X = self.fc3_m5(X)
+        return X
     
     

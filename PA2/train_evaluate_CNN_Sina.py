@@ -8,7 +8,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from torch.utils.tensorboard import SummaryWriter
-from ConvNet import ConvNet 
+from ConvNet_Sina import ConvNet 
 import argparse
 import numpy as np 
 
@@ -23,10 +23,9 @@ def train(model, device, train_loader, optimizer, criterion, epoch, batch_size):
     epoch: Current epoch to train for.
     batch_size: Batch size to be used.
     '''
-    
     # Set model to train mode before each epoch
     model.train()
-    
+
     # Empty list to store losses 
     losses = []
     correct = 0
@@ -44,12 +43,8 @@ def train(model, device, train_loader, optimizer, criterion, epoch, batch_size):
         # Do forward pass for current set of data
         output = model(data)
         
-        # ======================================================================
         # Compute loss based on criterion
-        # ----------------- YOUR CODE HERE ----------------------
-        #
-        # Remove NotImplementedError and assign correct loss function.
-        loss = NotImplementedError()
+        loss = criterion(output, target)
         
         # Computes gradient based on final loss
         loss.backward()
@@ -63,12 +58,8 @@ def train(model, device, train_loader, optimizer, criterion, epoch, batch_size):
         # Get predicted index by selecting maximum log-probability
         pred = output.argmax(dim=1, keepdim=True)
         
-        # ======================================================================
         # Count correct predictions overall 
-        # ----------------- YOUR CODE HERE ----------------------
-        #
-        # Remove NotImplementedError and assign counting function for correct predictions.
-        correct = NotImplementedError()
+        correct += pred.eq(target.view_as(pred)).sum().item()
         
     train_loss = float(np.mean(losses))
     train_acc = correct / ((batch_idx+1) * batch_size)
@@ -79,14 +70,13 @@ def train(model, device, train_loader, optimizer, criterion, epoch, batch_size):
     
 
 
-def test(model, device, test_loader):
+def test(model, device, test_loader, criterion):
     '''
     Tests the model.
     model: The model to train. Should already be in correct device.
     device: 'cuda' or 'cpu'.
     test_loader: dataloader for test samples.
     '''
-    
     # Set model to eval mode to notify all layers.
     model.eval()
     
@@ -99,17 +89,11 @@ def test(model, device, test_loader):
             data, target = sample
             data, target = data.to(device), target.to(device)
             
-
             # Predict for data by doing forward pass
             output = model(data)
             
-            # ======================================================================
             # Compute loss based on same criterion as training
-            # ----------------- YOUR CODE HERE ----------------------
-            #
-            # Remove NotImplementedError and assign correct loss function.
-            # Compute loss based on same criterion as training 
-            loss = NotImplementedError()
+            loss = criterion(output, target)
             
             # Append loss to overall test loss
             losses.append(loss.item())
@@ -117,12 +101,8 @@ def test(model, device, test_loader):
             # Get predicted index by selecting maximum log-probability
             pred = output.argmax(dim=1, keepdim=True)
             
-            # ======================================================================
             # Count correct predictions overall 
-            # ----------------- YOUR CODE HERE ----------------------
-            #
-            # Remove NotImplementedError and assign counting function for correct predictions.
-            correct = NotImplementedError()
+            correct += pred.eq(target.view_as(pred)).sum().item()
 
     test_loss = float(np.mean(losses))
     accuracy = 100. * correct / len(test_loader.dataset)
@@ -134,29 +114,32 @@ def test(model, device, test_loader):
     
 
 def run_main(FLAGS):
+    '''
+    For Nvidia GPUs, use the below code for using CUDA
+    '''
     # Check if cuda is available
-    use_cuda = torch.cuda.is_available()
+    #use_cuda = torch.cuda.is_available()
     
     # Set proper device based on cuda availability 
-    device = torch.device("cuda" if use_cuda else "cpu")
+    #device = torch.device("cuda" if use_cuda else "cpu")
+    #print("Torch device selected: ", device)
+
+    ''' 
+    Since I have a Mac with M2 chip, I changed this part of code.
+    For Apple GPUs, use the below code for using Metal Performance Shaders (MPS)
+    '''
+    use_mps = torch.backends.mps.is_available()
+    device = torch.device("mps" if use_mps else "cpu")
     print("Torch device selected: ", device)
     
     # Initialize the model and send to device 
     model = ConvNet(FLAGS.mode).to(device)
-    
-    # ======================================================================
+
     # Define loss function.
-    # ----------------- YOUR CODE HERE ----------------------
-    #
-    # Remove NotImplementedError and assign correct loss function.
-    criterion = NotImplementedError()
+    criterion = nn.CrossEntropyLoss()
     
-    # ======================================================================
     # Define optimizer function.
-    # ----------------- YOUR CODE HERE ----------------------
-    #
-    # Remove NotImplementedError and assign appropriate optimizer with learning rate and other paramters.
-    optimizer = NotImplementedError()
+    optimizer = optim.SGD(model.parameters(), lr=FLAGS.learning_rate)
         
     
     # Create transformations to apply to each data sample 
@@ -183,7 +166,7 @@ def run_main(FLAGS):
     for epoch in range(1, FLAGS.num_epochs + 1):
         train_loss, train_accuracy = train(model, device, train_loader,
                                             optimizer, criterion, epoch, FLAGS.batch_size)
-        test_loss, test_accuracy = test(model, device, test_loader)
+        test_loss, test_accuracy = test(model, device, test_loader, criterion)
         
         if test_accuracy > best_accuracy:
             best_accuracy = test_accuracy

@@ -5,3 +5,5 @@ Results/
 *.docx
 *.pdf
 Sample Code/
+data/
+__pycache__/
