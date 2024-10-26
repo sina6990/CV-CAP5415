@@ -7,12 +7,14 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard.writer import SummaryWriter
 from ConvNet_Sina import ConvNet 
 import argparse
-import numpy as np 
+import numpy as np
+from tqdm import tqdm
+from tensorboard import notebook
 
-def train(model, device, train_loader, optimizer, criterion, epoch, batch_size):
+def train(model, device, train_loader, optimizer, criterion, epoch, batch_size, writer):
     '''
     Trains the model for an epoch and optimizes it.
     model: The model to train. Should already be in correct device.
@@ -31,7 +33,7 @@ def train(model, device, train_loader, optimizer, criterion, epoch, batch_size):
     correct = 0
     
     # Iterate over entire training samples (1 epoch)
-    for batch_idx, batch_sample in enumerate(train_loader):
+    for batch_idx, batch_sample in enumerate(tqdm(train_loader, desc=f'Training Epoch {epoch}')):
         data, target = batch_sample
         
         # Push data/label to correct device
@@ -63,14 +65,17 @@ def train(model, device, train_loader, optimizer, criterion, epoch, batch_size):
         
     train_loss = float(np.mean(losses))
     train_acc = correct / ((batch_idx+1) * batch_size)
-    print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    print('Train set: Average loss: {:.4f} | Accuracy: {}/{} ({:.2f}%)\n'.format(
         float(np.mean(losses)), correct, (batch_idx+1) * batch_size,
         100. * correct / ((batch_idx+1) * batch_size)))
+    
+    writer.add_scalar('Loss/train', train_loss, epoch)
+    writer.add_scalar('Accuracy/train', train_acc, epoch)
     return train_loss, train_acc
     
 
 
-def test(model, device, test_loader, criterion):
+def test(model, device, test_loader, criterion, epoch, writer):
     '''
     Tests the model.
     model: The model to train. Should already be in correct device.
@@ -85,7 +90,7 @@ def test(model, device, test_loader, criterion):
     
     # Set torch.no_grad() to disable gradient computation and backpropagation
     with torch.no_grad():
-        for batch_idx, sample in enumerate(test_loader):
+        for batch_idx, sample in enumerate(tqdm(test_loader, desc='Testing')):
             data, target = sample
             data, target = data.to(device), target.to(device)
             
@@ -107,9 +112,11 @@ def test(model, device, test_loader, criterion):
     test_loss = float(np.mean(losses))
     accuracy = 100. * correct / len(test_loader.dataset)
 
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    print('Test set: Average loss: {:.4f} | Accuracy: {}/{} ({:.2f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset), accuracy))
     
+    writer.add_scalar('Loss/test', test_loss, epoch)
+    writer.add_scalar('Accuracy/test', accuracy, epoch)
     return test_loss, accuracy
     
 
@@ -117,20 +124,20 @@ def run_main(FLAGS):
     '''
     For Nvidia GPUs, use the below code for using CUDA
     '''
-    # Check if cuda is available
-    #use_cuda = torch.cuda.is_available()
+    #Check if cuda is available
+    use_cuda = torch.cuda.is_available()
     
-    # Set proper device based on cuda availability 
-    #device = torch.device("cuda" if use_cuda else "cpu")
-    #print("Torch device selected: ", device)
+    #Set proper device based on cuda availability 
+    device = torch.device("cuda" if use_cuda else "cpu")
+    print("Torch device selected: ", device)
 
     ''' 
     Since I have a Mac with M2 chip, I changed this part of code.
     For Apple GPUs, use the below code for using Metal Performance Shaders (MPS)
     '''
-    use_mps = torch.backends.mps.is_available()
-    device = torch.device("mps" if use_mps else "cpu")
-    print("Torch device selected: ", device)
+    # use_mps = torch.backends.mps.is_available()
+    # device = torch.device("mps" if use_mps else "cpu")
+    # print("Torch device selected: ", device)
     
     # Initialize the model and send to device 
     model = ConvNet(FLAGS.mode).to(device)
@@ -156,24 +163,25 @@ def run_main(FLAGS):
     dataset2 = datasets.MNIST('./data/', train=False,
                        transform=transform)
     train_loader = DataLoader(dataset1, batch_size = FLAGS.batch_size, 
-                                shuffle=True, num_workers=4)
+                                shuffle=True, num_workers=2)
     test_loader = DataLoader(dataset2, batch_size = FLAGS.batch_size, 
-                                shuffle=False, num_workers=4)
+                                shuffle=False, num_workers=2)
     
+    writer = SummaryWriter(FLAGS.log_dir)
+
     best_accuracy = 0.0
-    
     # Run training for n_epochs specified in config 
     for epoch in range(1, FLAGS.num_epochs + 1):
+        print(f"Epoch: {epoch}\n")
         train_loss, train_accuracy = train(model, device, train_loader,
-                                            optimizer, criterion, epoch, FLAGS.batch_size)
-        test_loss, test_accuracy = test(model, device, test_loader, criterion)
-        
+                                            optimizer, criterion, epoch, FLAGS.batch_size, writer)
+        test_loss, test_accuracy = test(model, device, test_loader, criterion, epoch, writer)
+        print("-------------------------------------------------------------\n")
         if test_accuracy > best_accuracy:
             best_accuracy = test_accuracy
     
-    
+    writer.close()
     print("accuracy is {:2.2f}".format(best_accuracy))
-    
     print("Training and evaluation finished")
     
     
@@ -202,5 +210,3 @@ if __name__ == '__main__':
     FLAGS, unparsed = parser.parse_known_args()
     
     run_main(FLAGS)
-    
-    
