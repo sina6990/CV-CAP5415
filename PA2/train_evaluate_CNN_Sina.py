@@ -60,7 +60,7 @@ def train(model, device, train_loader, optimizer, criterion, epoch, batch_size, 
         # Get predicted index by selecting maximum log-probability
         pred = output.argmax(dim=1, keepdim=True)
         
-        # Count correct predictions overall 
+        # Count how many predictions are correct by comparing with ground truth 
         correct += pred.eq(target.view_as(pred)).sum().item()
         
     train_loss = float(np.mean(losses))
@@ -69,8 +69,10 @@ def train(model, device, train_loader, optimizer, criterion, epoch, batch_size, 
         float(np.mean(losses)), correct, (batch_idx+1) * batch_size,
         100. * correct / ((batch_idx+1) * batch_size)))
     
+    # Log training loss and accuracy to TensorBoard
     writer.add_scalar('Loss/train', train_loss, epoch)
     writer.add_scalar('Accuracy/train', train_acc, epoch)
+    
     return train_loss, train_acc
     
 
@@ -106,7 +108,7 @@ def test(model, device, test_loader, criterion, epoch, writer):
             # Get predicted index by selecting maximum log-probability
             pred = output.argmax(dim=1, keepdim=True)
             
-            # Count correct predictions overall 
+            # Count how many predictions are correct by comparing with ground truth
             correct += pred.eq(target.view_as(pred)).sum().item()
 
     test_loss = float(np.mean(losses))
@@ -115,8 +117,10 @@ def test(model, device, test_loader, criterion, epoch, writer):
     print('Test set: Average loss: {:.4f} | Accuracy: {}/{} ({:.2f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset), accuracy))
     
+    # Log test loss and accuracy to TensorBoard
     writer.add_scalar('Loss/test', test_loss, epoch)
     writer.add_scalar('Accuracy/test', accuracy, epoch)
+
     return test_loss, accuracy
     
 
@@ -142,10 +146,10 @@ def run_main(FLAGS):
     # Initialize the model and send to device 
     model = ConvNet(FLAGS.mode).to(device)
 
-    # Define loss function.
+    # Define loss function
     criterion = nn.CrossEntropyLoss()
     
-    # Define optimizer function.
+    # Define optimizer function
     optimizer = optim.SGD(model.parameters(), lr=FLAGS.learning_rate)
         
     
@@ -167,9 +171,11 @@ def run_main(FLAGS):
     test_loader = DataLoader(dataset2, batch_size = FLAGS.batch_size, 
                                 shuffle=False, num_workers=2)
     
+    # Set up TensorBoard writer to log training and evaluation metrics
     writer = SummaryWriter(FLAGS.log_dir)
 
     best_accuracy = 0.0
+
     # Run training for n_epochs specified in config 
     for epoch in range(1, FLAGS.num_epochs + 1):
         print(f"Epoch: {epoch}\n")
@@ -180,6 +186,7 @@ def run_main(FLAGS):
         if test_accuracy > best_accuracy:
             best_accuracy = test_accuracy
     
+    # Close the TensorBoard writer
     writer.close()
     print("accuracy is {:2.2f}".format(best_accuracy))
     print("Training and evaluation finished")
