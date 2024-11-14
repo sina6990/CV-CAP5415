@@ -66,7 +66,7 @@ class ConvNet(nn.Module):
         X = self.conv2(X)                 # Apply second convolutional layer
         X = F.sigmoid(X)                  # Apply sigmoid activation function
         X = self.pool(X)                  # Apply max pooling
-        X = torch.flatten(X, start_dim=1) # Flatten the input tensor
+        X = torch.flatten(X, start_dim=1) # Flatten the tensor
         X = self.fc1_m2_3(X)              # Apply first fully connected layer
         X = F.sigmoid(X)                  # Apply sigmoid activation function
         X = self.fc2_m2_3(X)              # Apply second fully connected layer
@@ -77,16 +77,15 @@ class ConvNet(nn.Module):
         #######################################################################
         ### Two convolutional layers + one fully connected layer, with ReLU ###
         #######################################################################
-        X = self.conv1(X)
-        X = F.relu(X)
-        X = self.pool(X)
-        X = self.conv2(X)
-        X = F.relu(X)
-        X = self.pool(X)
-        X = torch.flatten(X, start_dim=1)
-        X = self.fc1_m2_3(X)
-        X = F.relu(X)
-        X = self.fc2_m2_3(X)
+        X = self.conv1(X)                  # Apply first convolutional layer
+        X = F.relu(X)                      # Apply ReLU activation function
+        X = self.pool(X)                   # Apply max pooling
+        X = self.conv2(X)                  # Apply second convolutional layer
+        X = F.relu(X)                      # Apply ReLU activation function
+        X = self.pool(X)                   # Apply max pooling
+        X = torch.flatten(X, start_dim=1)  # Flatten the tensor
+        X = F.relu(X)                      # Apply ReLU activation function
+        X = self.fc2_m2_3(X)               # Apply second fully connected layer
         return X
 
     # Add one extra fully connected layer.
@@ -94,18 +93,18 @@ class ConvNet(nn.Module):
         ########################################################################
         ### Two convolutional layers + two fully connected layers, with ReLU ###
         ########################################################################
-        X = self.conv1(X)
-        X = F.relu(X)
-        X = self.pool(X)
-        X = self.conv2(X)
-        X = F.relu(X)
-        X = self.pool(X)
-        X = torch.flatten(X, start_dim=1)
-        X = self.fc1_m4(X)
-        X = F.relu(X)
-        X = self.fc2_m4(X)
-        X = F.relu(X)
-        X = self.fc3_m4(X)
+        X = self.conv1(X)                 # Apply first convolutional layer
+        X = F.relu(X)                     # Apply ReLU activation function
+        X = self.pool(X)                  # Apply max pooling
+        X = self.conv2(X)                 # Apply second convolutional layer
+        X = F.relu(X)                     # Apply ReLU activation function
+        X = self.pool(X)                  # Apply max pooling
+        X = torch.flatten(X, start_dim=1) # Flatten the tensor
+        X = self.fc1_m4(X)                # Apply first fully connected layer
+        X = F.relu(X)                     # Apply ReLU activation function
+        X = self.fc2_m4(X)                # Apply second fully connected layer
+        X = F.relu(X)                     # Apply ReLU activation function
+        X = self.fc3_m4(X)                # Apply third fully connected layer
         return X
 
     # Use Dropout now.
@@ -113,19 +112,19 @@ class ConvNet(nn.Module):
         ##################################################################################
         ### Two convolutional layers + two fully connected layers, with ReLU + Dropout ###
         ##################################################################################
-        X = self.conv1(X)
-        X = F.relu(X)
-        X = self.pool(X)
-        X = self.conv2(X)
-        X = F.relu(X)
-        X = self.pool(X)
-        X = torch.flatten(X, start_dim=1)
-        X = self.fc1_m5(X)
-        X = F.relu(X)
-        X = self.dropout(X)
-        X = self.fc2_m5(X)
-        X = F.relu(X)
-        X = self.dropout(X)
-        X = self.fc3_m5(X)
+        X = self.conv1(X)                 # Apply first convolutional layer
+        X = F.relu(X)                     # Apply ReLU activation function
+        X = self.pool(X)                  # Apply max pooling
+        X = self.conv2(X)                 # Apply second convolutional layer
+        X = F.relu(X)                     # Apply ReLU activation function
+        X = self.pool(X)                  # Apply max pooling
+        X = torch.flatten(X, start_dim=1) # Flatten the tensor
+        X = self.fc1_m5(X)                # Apply first fully connected layer
+        X = F.relu(X)                     # Apply ReLU activation function
+        X = self.dropout(X)               # Apply dropout
+        X = self.fc2_m5(X)                # Apply second fully connected layer
+        X = F.relu(X)                     # Apply ReLU activation function
+        X = self.dropout(X)               # Apply dropout
+        X = self.fc3_m5(X)                # Apply third fully connected layer
         return X
     

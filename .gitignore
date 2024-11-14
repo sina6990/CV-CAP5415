@@ -4,6 +4,7 @@ Images/
 Results/
 *.docx
 *.pdf
+*.zip
 Sample Code/
 data/
 __pycache__/
