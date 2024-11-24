@@ -20,16 +20,17 @@ def plot_histogram(image, number, current_directory):
     '''
     Arguments:
          image: Grayscale image as a NumPy array
-         title: Title for the histogram plot
+         number: Image number for saving the histogram plot for each image
+         current_directory: Path to the current directory
     Returns:
-        Saves the distribution plot of pixel intensities
+         Saves the distribution plot of pixel intensities
     '''
     plt.figure()
     plt.hist(image.ravel(), bins=256, range=(0, 256), color='black')
     plt.xlabel('Pixel Intensity')
     plt.ylabel('Frequency')
-    plt.title(f'Histogram of Pixel Intensities for image {number+1}')
-    plt.savefig(os.path.join(current_directory, f'Results/Otsu/Historgram_intensity_image_{number+1}.jpg'))
+    plt.title(f'Histogram of Pixel Intensities for image {number}')
+    plt.savefig(os.path.join(current_directory, f'Results/Otsu/Historgram_intensity_image_{number}.jpg'))
 
 def otsu_thresholding(image):
     # Calculate the histogram of pixel intensities
@@ -37,9 +38,9 @@ def otsu_thresholding(image):
     
     # Calculate the probability of each intensity level
     total_pixels = image.shape[0] * image.shape[1]
-    pixel_probs = histogram / total_pixels 
+    pixel_probs = histogram / total_pixels
     
-    # Calculate cumulative sums for weights and cumulative mean for each threshold
+    # Calculate cumulative sums for probabilities and cumulative mean for each threshold
     cumulative_sum = np.cumsum(pixel_probs)
     cumulative_mean = np.cumsum(pixel_probs * np.arange(256))
 
@@ -78,7 +79,7 @@ def main():
     
     for i, filepath in enumerate(filepaths):
         image = load_image(filepath)
-        plot_histogram(image, i, current_directory)
+        plot_histogram(image, i+1, current_directory)
         
         # Perform Otsu's thresholding
         otsu_image, threshold = otsu_thresholding(image)

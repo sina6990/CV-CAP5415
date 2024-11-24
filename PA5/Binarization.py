@@ -20,16 +20,17 @@ def plot_histogram(image, number, current_directory):
     '''
     Arguments:
          image: Grayscale image as a NumPy array
-         title: Title for the histogram plot
+         number: Image number for saving the histogram plot for each image
+         current_directory: Path to the current directory
     Returns:
-        Saves the distribution plot of pixel intensities
+         Saves the distribution plot of pixel intensities
     '''
     plt.figure()
     plt.hist(image.ravel(), bins=256, range=(0, 256), color='black')
     plt.xlabel('Pixel Intensity')
     plt.ylabel('Frequency')
-    plt.title(f'Histogram of Pixel Intensities for image {number+1}')
-    plt.savefig(os.path.join(current_directory, f'Results/Binarization/Historgram_intensity_image_{number+1}.jpg'))
+    plt.title(f'Histogram of Pixel Intensities for image {number}')
+    plt.savefig(os.path.join(current_directory, f'Results/Binarization/Historgram_intensity_image_{number}.jpg'))
 
 # Binarize the image using a given threshold value
 def binarize_image(image, threshold):
@@ -46,16 +47,18 @@ def binarize_image(image, threshold):
 # Main function to load and process three different images
 def main():
     '''
-    It loads images, allows the user to select thresholds, and saves binarized images
+    It loads images, and saves binarized images
     '''
     image_list = ['image_1.jpg', 'image_2.jpg', 'image_3.jpg']
     current_directory = os.path.dirname(os.path.abspath(__file__))
     filepaths = [os.path.join(current_directory, image) for image in image_list]
-    thresholds = {'image_1.jpg': 150, 'image_2.jpg': 100, 'image_3.jpg': 120}
+    # The threshold values for the images were chosen based on the histogram plots of the images.
+    # For new images, the threshold values can be adjusted accordingly
+    thresholds = {'image_1.jpg': 150, 'image_2.jpg': 125, 'image_3.jpg': 120}
     
     for i, filepath in enumerate(filepaths):
             image = load_image(filepath)
-            plot_histogram(image, i, current_directory)
+            plot_histogram(image, i+1, current_directory)
             # Get the treshold value for the image
             threshold = thresholds[image_list[i]]
             # Perform binarization using the decided threshold
